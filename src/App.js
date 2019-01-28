@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
+import * as EmailValidator from 'email-validator';
 import {
     Col,
     Row,
@@ -89,17 +90,44 @@ export class App extends Component {
         confirmLoading: true,
       });
 
-      this.props.messagePostRequest(name, email, messageBody);
-
-      setTimeout(() => {
+      //validation
+      if (name === '') {
         this.setState({
-          visible: false,
-          confirmLoading: false
+          confirmLoading: false,
+        });
+        
+        message.error('Name can not be blank!');
+      } else if (email === '') {
+        this.setState({
+          confirmLoading: false,
         });
 
-        message.success('New Message Has Been Added!');
-        this.props.messageListRequest(this.props.params);
-      }, 3000);
+        message.error('Email can not be blank!');
+      } else if (messageBody === '') {
+        this.setState({
+          confirmLoading: false,
+        });
+
+        message.error('Message can not be blank!');
+      } else if (!EmailValidator.validate(email)) {
+        this.setState({
+          confirmLoading: false,
+        });
+
+        message.error(`${email} is not a valid email!`);
+      } else {
+        this.props.messagePostRequest(name, email, messageBody);
+
+        setTimeout(() => {
+          this.setState({
+            visible: false,
+            confirmLoading: false
+          });
+
+          message.success('New Message Has Been Added!');
+          this.props.messageListRequest(this.props.params);
+        }, 3000);
+      }
     };
 
     render() {
