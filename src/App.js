@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
+import Cookies from 'universal-cookie';
 import {connect} from 'react-redux';
-import * as EmailValidator from 'email-validator';
 import {
     Col,
     Row,
@@ -8,41 +8,64 @@ import {
     Modal,
     Input,
     Table,
-    Button
+    Button,
+    Tooltip,
+    Tabs
 } from 'antd';
 import moment from 'moment';
 import messageAction from './redux/app/actions';
+import authAction from './redux/auth/actions';
+
+const {logoutRequest} = authAction;
+const TabPane = Tabs.TabPane;
 
 const {
+    myMessageListRequest,
     messageListRequest,
     messagePostRequest,
     resetMessagestate,
     messageDeleteRequest
 } = messageAction;
 
+const cookies = new Cookies();
 const { TextArea } = Input;
+
+const tableinfos = [{
+    title: 'All Messages',
+    value: 'all',
+  },
+  {
+    title: 'My Messages',
+    value: 'my',
+  }
+];
 
 const columns = [{
     title: 'Name',
     dataIndex: 'name',
-    key: 'name'
+    key: 'name',
+    width: 200
 }, {
     title: 'Email',
     dataIndex: 'email',
-    key: 'email'
+    key: 'email',
+    width: 200
 }, {
     title: 'Message',
     dataIndex: 'message_body',
-    key: 'message_body'
+    key: 'message_body',
+    width: 400
 }, {
     title: 'Date',
     dataIndex: 'created_at',
-    key: 'created_at'
+    key: 'created_at',
+    width: 200
 },
 {
   title: 'Action',
   dataIndex: 'action',
-  key: 'action'
+  key: 'action',
+  width: 100
 }];
 
 export class App extends Component {
@@ -51,14 +74,15 @@ export class App extends Component {
         this.state = {
             visible: false,
             confirmLoading: false,
-            name: null,
-            email: null,
-            messageBody: null
+            messageBody: '',
+            iconLoading: false
         }
     }
 
-    getAction = (id) => {
-        return <Button type="danger" onClick={() => this.deleteMessage(id)}>Delete</Button>
+    getAction = (id, userId) => {
+        if (this.props.user !== null && this.props.user.id === userId) {
+          return <Button type="danger" onClick={() => this.deleteMessage(id)}>Delete</Button>
+        }
     }
 
     componentDidMount = () => {
@@ -85,43 +109,26 @@ export class App extends Component {
     };
 
     handleOk = () => {
-      const {name, email, messageBody} = this.state;
+      const {messageBody} = this.state;
       this.setState({
         confirmLoading: true,
       });
 
       //validation
-      if (name === '') {
-        this.setState({
-          confirmLoading: false,
-        });
-        
-        message.error('Name can not be blank!');
-      } else if (email === '') {
-        this.setState({
-          confirmLoading: false,
-        });
-
-        message.error('Email can not be blank!');
-      } else if (messageBody === '') {
+      if (messageBody === '') {
         this.setState({
           confirmLoading: false,
         });
 
         message.error('Message can not be blank!');
-      } else if (!EmailValidator.validate(email)) {
-        this.setState({
-          confirmLoading: false,
-        });
-
-        message.error(`${email} is not a valid email!`);
       } else {
-        this.props.messagePostRequest(name, email, messageBody);
+        this.props.messagePostRequest(messageBody);
 
         setTimeout(() => {
           this.setState({
             visible: false,
-            confirmLoading: false
+            confirmLoading: false,
+            messageBody: ''
           });
 
           message.success('New Message Has Been Added!');
@@ -129,6 +136,20 @@ export class App extends Component {
         }, 3000);
       }
     };
+
+    handleLogout = () => {
+      this.setState({ iconLoading: true });
+      cookies.remove('message_token', {'path': '/'});
+      cookies.remove('message_user', {'path': '/'});
+      
+      setTimeout(() => {
+        this.setState({ iconLoading: false });
+        
+        message.success('You have been logged out');
+        this.props.logoutRequest();
+        this.props.history.push('/login');
+      }, 3000);
+    }
 
     render() {
         const {visible, confirmLoading} = this.state;
@@ -145,7 +166,10 @@ export class App extends Component {
                     created_at: item.created_at ? moment.parseZone(item.created_at).format('MM-DD-YYYY HH:MM:SS') : '',
                     name: item.user.username,
                     email: item.user.email,
-                    action: this.getAction(item.id)
+                    action: this.getAction(item.id, item.user.id),
+                    message_body: <Tooltip title={item.message_body} placement="topLeft">
+                            {item.message_body.length < 51 ? item.message_body : item.message_body.slice(0, 50).concat('...')}
+                        </Tooltip>,
                 }
             });
 
@@ -166,60 +190,85 @@ export class App extends Component {
 
         return (
             <div>
+                <h1 style={{width: '100%', textAlign: 'center'}}>Welcome To Message Board</h1>
                 <Row>
-                    <Button
-                            style={{width: '50%', borderRadius: 4, textAlign: 'center', marginLeft: 0}}
-                            onClick={this.showModal}
-                            type="primary"
-                        >
-                            New Message
-                    </Button>
+                    <Col span={8}>
+                      <Button
+                        style={{width: '50%', borderRadius: 4, textAlign: 'center', marginLeft: 40}}
+                        onClick={this.showModal}
+                        type="primary"
+                      >
+                        New Message
+                      </Button>
+                    </Col>
+                    <Col span={16}>
+                      <Button 
+                        style={{width: '25%', borderRadius: 4, textAlign: 'center', marginRight: 40, float: 'right'}}
+                        onClick={this.handleLogout}
+                        type="primary" 
+                        icon="poweroff" 
+                        loading={this.state.iconLoading} 
+                      >
+                        Logout
+                      </Button>
+                    </Col>
                     <Modal title="Create Message"
-                            visible={visible}
-                            onOk={this.handleOk}
-                            confirmLoading={confirmLoading}
-                            onCancel={this.handleCancel}
-                            width={700}
-                            centered
+                      visible={visible}
+                      onOk={this.handleOk}
+                      confirmLoading={confirmLoading}
+                      onCancel={this.handleCancel}
+                      width={500}
+                      centered
                     >
-                        <Row justify="start">
-                            <Col span={4}>
-                                <label>Name: </label>
-                                <Input
-                                    onChange={e => this.setState({name: e.target.value})}/>
-                            </Col>
-                        </Row>
-                        <br/>
-                        <Row justify="start">
-                            <Col span={4}>
-                                <label>Email: </label>
-                                <Input
-                                    onChange={e => this.setState({email: e.target.value})}/>
-                            </Col>
-                        </Row>
-                        <br/>
-                        <Row justify="start">
-                            <Col span={12}>
-                                <label>Message: </label>
-                                <TextArea 
-                                    placeholder="Enter your message" 
-                                    autosize={{ minRows: 2, maxRows: 6 }} 
-                                    onChange={e => this.setState({messageBody: e.target.value})}
-                                />
-                            </Col>
-                        </Row>
-                            
+                      <Row justify="start">
+                        <Col span={24}>
+                          <label>Message: </label>
+                          <TextArea 
+                            placeholder="Enter your message" 
+                            autosize={{ minRows: 6, maxRows: 10 }} 
+                            onChange={e => this.setState({messageBody: e.target.value.trim()})}
+                          />
+                        </Col>
+                      </Row>   
                     </Modal>
                 </Row>
-                <Table
-                    columns={columns}
-                    dataSource={data}
-                    bordered
-                    loading={this.props.loading}
-                    pagination={options}
-                    size = "middle"
-                    footer={() => (<strong>Total: {options.total}</strong>)}
-                />
+                <Row>
+                  <Col span={24}>
+                    <Tabs defaultActiveKey="all"
+                      style = {{
+                        'margin': 40,
+                      }}
+                      onChange={
+                          key => this.props.messageListRequest({
+                              ...params,
+                              'pageIndex': 1,
+                              show: key
+                          })
+                      }>
+                    {
+                      tableinfos.map(tableInfo => (
+                        <TabPane tab={<span><strong>{tableInfo.title}</strong></span>}
+                                key={tableInfo.value}>
+                            <Table
+                              style = {{
+                                'padding': 10,
+                                'textAlign': 'center',
+                                'verticalAlign': 'middle'
+                              }}
+                              columns={columns}
+                              dataSource={data}
+                              bordered
+                              loading={this.props.loading}
+                              pagination={options}
+                              size = "small"
+                              footer={() => (<strong>Total: {options.total}</strong>)}
+                          />
+                        </TabPane>
+                      ))}
+                </Tabs>
+                  
+                  </Col>
+                </Row>  
             </div>
         );
     }
@@ -230,11 +279,14 @@ export default connect(
         messages: state.message.get('messages'),
         loading: state.message.get('loading'),
         params: state.message.get('params').toJS(),
+        user: state.auth.get('user') 
     }),
     {
         messageListRequest,
         messagePostRequest,
         resetMessagestate,
-        messageDeleteRequest
+        messageDeleteRequest,
+        logoutRequest,
+        myMessageListRequest
     }
 )(App);

@@ -1,11 +1,11 @@
 import React from 'react';
 import {Provider} from 'react-redux';
 import {history, store} from './redux/store';
-import App from './App';
+import PublicRoutes from './router';
 
 const DashApp = () => (
     <Provider store={store}>
-        <App history={history}/>
+        <PublicRoutes history={history}/>
     </Provider>
 );
 

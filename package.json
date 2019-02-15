@@ -15,10 +15,12 @@
     "module": "^1.2.5",
     "moment": "^2.20.0",
     "moment-timezone": "^0.5.21",
+    "nprogress": "^0.2.0",
     "prop-types": "^15.5.10",
     "react": "^16.7.0",
     "react-app-rewired": "^2.0.2",
     "react-dom": "^16.7.0",
+    "react-placeholder": "^3.0.1",
     "react-redux": "^5.0.4",
     "react-router": "^4.1.1",
     "react-router-dom": "^4.1.0",
@@ -29,7 +31,8 @@
     "redux-devtools": "^3.3.2",
     "redux-saga": "^0.15.4",
     "styled-components": "^2.2.1",
-    "styled-theme": "^0.3.3"
+    "styled-theme": "^0.3.3",
+    "universal-cookie": "^3.0.7"
   },
   "scripts": {
     "start": "react-app-rewired start",

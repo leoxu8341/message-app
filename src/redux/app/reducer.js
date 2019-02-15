@@ -8,7 +8,8 @@ const initState = new fromJS({
     params: {
         pageLimit: 10,
         pageIndex: 1,
-        sort: 'DESC'
+        sort: 'DESC',
+        show: 'all'
     },
 });
 
@@ -18,7 +19,8 @@ export default function messageReducer(state = initState, action) {
             return state.set('loading', true)
                 .setIn(['params', 'pageLimit'], action.params.pageLimit)
                 .setIn(['params', 'pageIndex'], action.params.pageIndex)
-                .setIn(['params', 'sort'], action.params.sort);
+                .setIn(['params', 'sort'], action.params.sort)
+                .setIn(['params', 'show'], action.params.show);
       
         case actions.MESSAGE_LIST_SUCCESS:
             return state

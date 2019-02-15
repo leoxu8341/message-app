@@ -18,12 +18,7 @@ export function* getMessagesSaga(action) {
 
 export function* postMessageSaga(action) {
     try {
-        yield call(
-            postMessage,
-            action.name,
-            action.email,
-            action.message
-        );
+        yield call(postMessage, action.message);
     } catch (e) {
         yield put(actions.messagePostFailure(e));
     }
@@ -31,10 +26,7 @@ export function* postMessageSaga(action) {
 
 export function* deleteMessageSaga(action) {
     try {
-        yield call(
-            deleteMessage,
-            action.id
-        );
+        yield call(deleteMessage, action.id);
     } catch (e) {
         yield put(actions.messagePostFailure(e));
     }

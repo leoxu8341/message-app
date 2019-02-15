@@ -27,10 +27,8 @@ const actions = {
     MESSAGE_POST_REQUEST: 'MESSAGE_POST_REQUEST',
     MESSAGE_POST_FAILURE: 'MESSAGE_POST_FAILURE',
 
-    messagePostRequest: (name, email, message) => ({
+    messagePostRequest: (message) => ({
         type: actions.MESSAGE_POST_REQUEST,
-        name,
-        email,
         message
     }),
     messagePostFailure: (error) => ({
