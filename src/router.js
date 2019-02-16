@@ -24,7 +24,7 @@ const PublicRoutes = ({history, isLoggedIn}) => {
 
     return (
         <ConnectedRouter history={history}>
-            <div>
+            <div style={{'height': '100%'}}>
                 <Route
                     exact
                     path={'/'}

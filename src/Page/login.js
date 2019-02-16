@@ -33,7 +33,9 @@ class Login extends Component {
           'width': '100%',
           'textAlign': 'center',
           'verticalAlign': 'middle',
-          'maxWidth': '400px'
+          'maxWidth': '400px',
+          'height': '100%',
+          'paddingTop': '200px'
         }}>
           <Form.Item>
             {getFieldDecorator('email', {
